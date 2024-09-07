@@ -3,7 +3,7 @@
 
 main()
 {
-	local titulo="CREATE - SWAPFILE"
+	local titulo="CREATING - SWAPFILE"
 	local opcion_valida="false"
 	local swapfile_name="swapfile_v1"
 	local swapfile_path="/mnt/swapfiles"
@@ -13,6 +13,8 @@ main()
 	while [ $opcion_valida = "false" ]
 	do
 	    clear
+        input_custom_swapfile_name "$titulo" "\n\n Nombre del archivo:\n\n" 10 42 "$swapfile_name"
+        input_custom_swapfile_path "$titulo" "\n\n Ruta del archivo:\n\n" 10 42 "$swapfile_path"
         input_custom_swapfile_size "$titulo" "\n\n Ruta del archivo:\n $swapfile_path\n\n Nombre del archivo:\n $swapfile_name\n\n Tamaño maximo permitido:\n $swapfile_max_size (MB)\n\n Tamaño del archivo (MB)" 22 42
         if [[ $returncode = 0 ]]; then
         {
@@ -23,7 +25,7 @@ main()
                     opcion_valida="true"
                     if [ ! -d "$swapfile_path" ]; then
                     {
-                        show_custom_message "$titulo" "\nEl directorio $swapfile_path no existe. ¿Desea proceder?..." 10 42
+                        show_custom_message "$titulo" "\n\nLa ruta $swapfile_path no existe...\n\n¿Desea crearlo y proceder?" 10 42
                         if [[ $returncode = 0 ]]; then
                         {
                             sudo mkdir -p "$swapfile_path"
@@ -55,6 +57,32 @@ main()
         fi
     done
     show_custom_message "$titulo" "\nPresione una tecla para continuar...\n" 10 42
+}
+
+input_custom_swapfile_path()
+{
+    local titulo="$1"
+    local mensaje_dialog="$2"
+    local width="$3"
+    local height="$4"
+    local default_path="$5"
+    swapfile_path=$(dialog --title "$titulo" \
+        --stdout \
+        --inputbox "$mensaje_dialog" "$width" "$height" "$default_path")
+    returncode=$?
+}
+
+input_custom_swapfile_name()
+{
+    local titulo="$1"
+    local mensaje_dialog="$2"
+    local width="$3"
+    local height="$4"
+    local default_name="$5"
+    swapfile_name=$(dialog --title "$titulo" \
+        --stdout \
+        --inputbox "$mensaje_dialog" "$width" "$height" "$default_name")
+    returncode=$?
 }
 
 input_custom_swapfile_size()
