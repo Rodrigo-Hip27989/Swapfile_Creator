@@ -4,9 +4,9 @@
 main()
 {
 	local titulo="CREATING - SWAPFILE"
-    local timestamp=$(date +"%y%m%d-%H%M%S")
-	local swapfile_name="SF-$timestamp"
-	local swapfile_path="/mnt/Swapfiles"
+	local swapfile_name=""
+	local swapfile_path=""
+	local swapfile_path_default="/mnt/Swapfiles"
 	local swapfile_min_size=1
 	local swapfile_max_size=$(df -m . | grep -v Filesystem | awk '{print $4}')
 	local swapfile_size=0
@@ -15,15 +15,15 @@ main()
 	do
 	    clear
         regex_swapfile_path='^(/[A-Za-z0-9.]+[-A-Za-z0-9_]*)+$'
-        swapfile_path=$(input_custom_swapfile_path "$titulo" "\n\n ❯ Ruta del archivo \n\n RegEx: ^(/[A-Za-z0-9.]+[-A-Za-z0-9_]*)+$ \n " 13 48 "$swapfile_path")
+        swapfile_path=$(input_custom_swapfile_path "$titulo" "\n\n ❯ Ruta del archivo \n\n RegEx: ^(/[A-Za-z0-9.]+[-A-Za-z0-9_]*)+$ \n " 13 48 "$swapfile_path_default")
         if [[ (-n "$swapfile_path") && ("$swapfile_path" =~ $regex_swapfile_path) ]]; then
         {
             regex_swapfile_size='^[0-9]+$'
-            swapfile_size=$(input_custom_swapfile_size "$titulo" "\n\n ❯ Ingresar el tamaño (MB) \n\n RegEx: ^[0-9]+$ \n\n Espacio disponible:  $swapfile_max_size (MB) \n " 15 48)
+            swapfile_size=$(input_custom_swapfile_size "$titulo" "\n\n ❯ Ingresar el tamaño (MB) \n\n RegEx: ^[0-9]+$ \n\n Espacio disponible:  $swapfile_max_size (MB) \n " 15 48 "$swapfile_min_size")
             if [[ (-n "$swapfile_size") && ("$swapfile_size" =~ $regex_swapfile_size) ]]; then
             {
                 regex_swapfile_name='^[A-Za-z0-9.]+[-A-Za-z0-9_]*$'
-                swapfile_name=$(input_custom_swapfile_name "$titulo" "\n\n ❯ Nombre del archivo \n\n RegEx: ^[A-Za-z0-9.]+[-A-Za-z0-9_]*$ \n " 13 48 "$swapfile_name-$swapfile_size-MB")
+                swapfile_name=$(input_custom_swapfile_name "$titulo" "\n\n ❯ Nombre del archivo \n\n RegEx: ^[A-Za-z0-9.]+[-A-Za-z0-9_]*$ \n " 13 48 "SP-$(date +"%y%m%d-%H%M%S")-$swapfile_size-MB")
                 if [[ (-n "$swapfile_name") && ("$swapfile_name" =~ $regex_swapfile_name) ]]; then
                 {
                     if [[ $swapfile_size -ge $swapfile_min_size && $swapfile_size -le $swapfile_max_size ]]; then
@@ -79,6 +79,7 @@ main()
                 {
                     opcion_valida="false"
                     show_custom_message "$titulo" "\n\n El nombre del archivo no es valido!\n" 10 42
+                    swapfile_name="SP-$(date +"%y%m%d-%H%M%S")-$swapfile_size-MB"
                 }
                 fi
             }
@@ -93,6 +94,7 @@ main()
         {
             opcion_valida="false"
             show_custom_message "$titulo" "\n\n La ruta ingresada no es valida!\n" 10 42
+            swapfile_path=$swapfile_path_default
         }
         fi
     done
@@ -131,9 +133,10 @@ input_custom_swapfile_size()
     local mensaje_dialog="$2"
     local width="$3"
     local height="$4"
+    local default_size="$5"
     swapfile_size=$(dialog --title "$titulo" \
         --stdout \
-        --inputbox "$mensaje_dialog" "$width" "$height")
+        --inputbox "$mensaje_dialog" "$width" "$height" "$default_size")
     echo "$swapfile_size"
 }
 
