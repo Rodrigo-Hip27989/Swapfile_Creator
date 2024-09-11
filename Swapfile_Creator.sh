@@ -9,7 +9,7 @@ main()
 	local swapfile_path_default="/mnt/Swapfiles"
 	local swapfile_min_size=1
 	local swapfile_max_size=$(df -m . | grep -v Filesystem | awk '{print $4}')
-	local swapfile_size=0
+	local swapfile_size=$swapfile_min_size
 	local opcion_valida="false"
 	while [ $opcion_valida = "false" ]
 	do
@@ -19,14 +19,14 @@ main()
         if [[ (-n "$swapfile_path") && ("$swapfile_path" =~ $regex_swapfile_path) ]]; then
         {
             regex_swapfile_size='^[0-9]+$'
-            swapfile_size=$(input_custom_swapfile_size "$titulo" "\n\n ❯ Ingresar el tamaño (MB) \n\n RegEx: ^[0-9]+$ \n\n Espacio disponible:  $swapfile_max_size (MB) \n " 15 48 "$swapfile_min_size")
+            swapfile_size=$(input_custom_swapfile_size "$titulo" "\n\n ❯ Ingresar el tamaño (MB) \n\n RegEx: ^[0-9]+$ \n\n Espacio disponible:  $swapfile_max_size (MB) \n " 15 48 "$swapfile_size")
             if [[ (-n "$swapfile_size") && ("$swapfile_size" =~ $regex_swapfile_size) ]]; then
             {
-                regex_swapfile_name='^[A-Za-z0-9.]+[-A-Za-z0-9_]*$'
-                swapfile_name=$(input_custom_swapfile_name "$titulo" "\n\n ❯ Nombre del archivo \n\n RegEx: ^[A-Za-z0-9.]+[-A-Za-z0-9_]*$ \n " 13 48 "SP-$(date +"%y%m%d-%H%M%S")-$swapfile_size-MB")
-                if [[ (-n "$swapfile_name") && ("$swapfile_name" =~ $regex_swapfile_name) ]]; then
+                if [[ $swapfile_size -ge $swapfile_min_size && $swapfile_size -le $swapfile_max_size ]]; then
                 {
-                    if [[ $swapfile_size -ge $swapfile_min_size && $swapfile_size -le $swapfile_max_size ]]; then
+                    regex_swapfile_name='^[A-Za-z0-9.]+[-A-Za-z0-9_]*$'
+                    swapfile_name=$(input_custom_swapfile_name "$titulo" "\n\n ❯ Nombre del archivo \n\n RegEx: ^[A-Za-z0-9.]+[-A-Za-z0-9_]*$ \n " 13 48 "SP-$(date +"%y%m%d-%H%M%S")-$swapfile_size-MB")
+                    if [[ (-n "$swapfile_name") && ("$swapfile_name" =~ $regex_swapfile_name) ]]; then
                     {
                         opcion_valida="true"
                         (dialog --title "$titulo" \
@@ -71,15 +71,16 @@ main()
                     else
                     {
                         opcion_valida="false"
-                        show_custom_message "$titulo" "\n\n Ingrese un valor entre $swapfile_min_size y $swapfile_max_size\n" 10 42
+                        show_custom_message "$titulo" "\n\n El nombre del archivo no es valido!\n" 10 42
+                        swapfile_name="SP-$(date +"%y%m%d-%H%M%S")-$swapfile_size-MB"
                     }
                     fi
                 }
                 else
                 {
                     opcion_valida="false"
-                    show_custom_message "$titulo" "\n\n El nombre del archivo no es valido!\n" 10 42
-                    swapfile_name="SP-$(date +"%y%m%d-%H%M%S")-$swapfile_size-MB"
+                    show_custom_message "$titulo" "\n\n Ingrese un valor entre $swapfile_min_size y $swapfile_max_size\n" 10 42
+                    swapfile_size=$swapfile_min_size
                 }
                 fi
             }
@@ -87,6 +88,7 @@ main()
             {
                 opcion_valida="false"
                 show_custom_message "$titulo" "\n\n El valor ingresado tiene que ser numerico!\n" 10 42
+                swapfile_size=$swapfile_min_size
             }
             fi
         }
@@ -159,7 +161,7 @@ create_swapfile()
     sudo swapon "$swapfile_path/$swapfile_name" --priority=100
     show_custom_message "$titulo" "\n\n ❯ Detalles:\n\n$formatted_swapfile\n\n" 12 55
     local swapon_show=$(swapon --show)
-    show_custom_message "$titulo" "\n\n ❯ Dispositivos o archivos de swapping:\n\n $swapon_show\n\n" 18 75
+    show_custom_message "$titulo" "\n\n ❯ Dispositivos y/o archivos de swapping:\n\n $swapon_show\n\n" 18 75
 }
 
 main
